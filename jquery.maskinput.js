@@ -1,8 +1,7 @@
 /*
   Mask Input plugin for jQuery
-  Copyright (c) 2013 Josh Bush (shaungrady.com)
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.0
+  Version: 1.1
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
@@ -17,13 +16,20 @@
       return this.filter('input').each(function(i, el) {
         var elem = $(el),
             mask = elem.attr('mask') || maskOption,
+            // An array of valid non-mask character positions. Used extensively for detecting invalid
+            // caret positions and moving it to an appropriate position.
             maskMap = [],
+            // Array of single-character regex patterns used for filtering mask from input value to
+            // produce the unmasked value.
             maskPattern = [],
+            // Used for placeholder attribute of input as well as maskifying the unmasked value for
+            // placement back into the input in the event listener.
             maskPlaceholder = '';
 
         if (mask === undefined)
           return true;
 
+        // Generate the maskMap, maskPattern, and maskPlaceholder values.
         $.each(mask.split(''), function(i, chr) {
           if (maskDefinitions[chr]) {
             maskMap.push(i);
@@ -42,6 +48,7 @@
               valUnmasked = unmaskValue(valMasked),
               isValid     = (valUnmasked.length === maskMap.length);
           elem.val(valMasked);
+          // maxlength prevents typing as input is always filled to length of mask.
           elem.removeAttr('maxlength');
           elem.attr('value-unmasked', valUnmasked);
           elem.data('isUnmaskedValueValid', isValid);
@@ -97,6 +104,7 @@
           var elem            = $(this),
               val             = elem.val(),
               valOld          = elem.data('valuePreinput')  || '',
+              valMasked,
               valUnmasked     = unmaskValue(val),
               valUnmaskedOld  = elem.attr('value-unmasked') || '',
 
@@ -111,14 +119,21 @@
               isSelected      = selectionLen > 0,
               wasSelected     = selectionLenOld > 0,
 
+                                                                // Case: Typing a character to overwrite a selection
               isAddition      = (val.length > valOld.length) || (selectionLenOld && val.length >  valOld.length - selectionLenOld),
+                                                                // Case: Delete and backspace behave identically on a selection
               isDeletion      = (val.length < valOld.length) || (selectionLenOld && val.length == valOld.length - selectionLenOld),
-              isSelection     = (eventWhich >= 37 && eventWhich <= 40) && e.shiftKey,
+              isSelection     = (eventWhich >= 37 && eventWhich <= 40) && e.shiftKey, // Arrow key codes
 
               isKeyLeftArrow  = eventWhich == 37,
+                                                    // Necessary due to input event not providing a key code
               isKeyBackspace  = eventWhich == 8  || (eventType != 'keyup' && isDeletion && (caretPosDelta === -1)),
               isKeyDelete     = eventWhich == 46 || (eventType != 'keyup' && isDeletion && (caretPosDelta === 0 ) && !wasSelected),
 
+              // Handles cases where caret is moved and placed in front of invalid maskMap position. Logic below
+              // ensures that, on click or leftward caret placement, caret is moved leftward until directly right of
+              // non-mask character. Also applied to click since users are arguably more likely to backspace
+              // a character when clicking within a filled input.
               caretBumpBack   = (isKeyLeftArrow || isKeyBackspace || eventType == 'click') && caretPos > 0;
 
           elem.data('selectionLengthPreinput', selectionLen);
@@ -130,23 +145,29 @@
           if (eventType == 'mouseout' || isSelection || (isSelected && eventType == 'click'))
             return true;
 
+          // Value Handling
+          // ==============
+
           // User attempted to delete but raw value was unaffected—correct this grievous offense
-          if (eventType == 'input' && isDeletion && !wasSelected && valUnmasked === valUnmaskedOld) {
+          if ((eventType == 'input' || eventType == 'propertychange') && isDeletion && !wasSelected && valUnmasked === valUnmaskedOld) {
             while (isKeyBackspace && caretPos > 0 && inArray(caretPos, maskMap) == -1)
               caretPos--;
             while (isKeyDelete && caretPos < maskPlaceholder.length && inArray(caretPos, maskMap) == -1)
               caretPos++;
             var charIndex = inArray(caretPos, maskMap);
+            // Strip out character that user inteded to delete if mask hadn't been in the way.
             valUnmasked = valUnmasked.substring(0, charIndex) + valUnmasked.substring(charIndex + 1); 
           }
+
           elem.attr('value-unmasked', valUnmasked);
           elem.data('isUnmaskedValueValid', (valUnmasked.length === maskMap.length));
           
-          var valMasked = maskValue(valUnmasked);
+          valMasked = maskValue(valUnmasked);
           elem.data('valuePreinput', valMasked);
           elem.val(valMasked);
 
           // Caret Repositioning
+          // ===================
 
           // Make sure caret ends up after typed character.
           if (caretPos <= caretPosMin && isAddition)
@@ -182,7 +203,8 @@
       });
     }
   });
-  // Helper functions
+
+  // Helper functions, needs refactor to be cleaner.
   function caretPositionOf(input, pos) {
     // Set position
     if (pos !== undefined) {
