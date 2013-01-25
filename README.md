@@ -29,3 +29,5 @@ The following are the default mask definitions and their regex equivalents:
     '9': /\d/
     'A': /[a-zA-Z]/
     '*': /[a-zA-Z0-9]/
+
+The unmasked value is set as the value of the "value-unmasked" attribute of the input. Validity of the current value can be accessed by using ``$('input').data('isUnmaskedValueValid')``, which returns ``true`` or ``false``.
