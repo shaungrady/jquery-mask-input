@@ -1,7 +1,7 @@
 /*
   Mask Input plugin for jQuery
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.1.1
+  Version: 1.1.2
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
@@ -43,15 +43,14 @@
 
         // Intialize input
         (function(elem) {
-          var val         = elem.val(),
-              valMasked   = maskValue(val),
-              valUnmasked = unmaskValue(valMasked),
+          var valUnmasked = unmaskValue(elem.val()),
+              valMasked   = maskValue(valUnmasked),
               isValid     = (valUnmasked.length === maskMap.length);
           elem.val(valMasked);
-          // maxlength prevents typing as input is always filled to length of mask.
-          elem.removeAttr('maxlength');
           elem.attr('value-unmasked', valUnmasked);
           elem.data('isUnmaskedValueValid', isValid);
+          // maxlength prevents typing as input is always filled to length of mask.
+          elem.removeAttr('maxlength');
         })(elem);
 
         elem.attr('placeholder', maskPlaceholder);
@@ -98,9 +97,7 @@
               eventType  = e.type,
               inArray    = $.inArray;
 
-          console.log(e);
-
-          // Shift, and alt aren't going to ruin our party.
+          // Shift and ctrl aren't going to ruin our party.
           if (eventWhich == 16 || eventWhich == 91) return true;
 
           var elem            = $(this),
