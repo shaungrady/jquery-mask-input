@@ -1,7 +1,7 @@
 /*
   Mask Input plugin for jQuery
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.1
+  Version: 1.1.1
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
@@ -98,8 +98,10 @@
               eventType  = e.type,
               inArray    = $.inArray;
 
-          // Shift, alt, and tab aren't going to ruin our party.
-          if (eventWhich == 16 || eventWhich == 91 || eventWhich == 9) return true;
+          console.log(e);
+
+          // Shift, and alt aren't going to ruin our party.
+          if (eventWhich == 16 || eventWhich == 91) return true;
 
           var elem            = $(this),
               val             = elem.val(),
@@ -142,7 +144,7 @@
           elem.unbind('mouseout.mask').one('mouseout.mask', eventHandler);
 
           // These events don't require any action
-          if (eventType == 'mouseout' || isSelection || (isSelected && eventType == 'click'))
+          if (eventType == 'mouseout' || isSelection || (isSelected && (eventType == 'click' || eventType == 'keyup')))
             return true;
 
           // Value Handling
