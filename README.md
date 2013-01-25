@@ -5,6 +5,10 @@ A jQuery plugin for applying a mask to an input (e.g., phone numbers, dates, et 
 
 jQuery Input Mask is licensed under the MIT license.
 
+## Demo
+http://plnkr.co/edit/qKCgHmJqOg7iXczmup5i?p=preview
+
+
 ## Usage
 	.maskInput([mask]);
 
