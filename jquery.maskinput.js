@@ -1,7 +1,7 @@
 /*
   Mask Input plugin for jQuery
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.1.2
+  Version: 1.2.0
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
@@ -9,6 +9,7 @@
     'A': /[a-zA-Z]/,
     '*': /[a-zA-Z0-9]/
   };
+
   // Plugin
   $.fn.extend({
     maskInput: function(maskOption) {
@@ -29,16 +30,35 @@
         if (mask === undefined)
           return true;
 
-        // Generate the maskMap, maskPattern, and maskPlaceholder values.
-        $.each(mask.split(''), function(i, chr) {
-          if (maskDefinitions[chr]) {
-            maskMap.push(i);
-            maskPlaceholder += '_';
-            maskPattern.push(maskDefinitions[chr]);
-          }
-          else
-            maskPlaceholder += chr;
-        });
+        // If mask is an array, it's a complex mask!
+        if (mask instanceof Array) {
+          var chrCount = 0;
+          $.each(mask, function(i, item) {
+            if (item instanceof RegExp) {
+              maskMap.push(chrCount++);
+              maskPlaceholder += '_';
+              maskPattern.push(item);
+            }
+            else if (typeof item == 'string') {
+              $.each(item.split(''), function(i, chr) {
+                maskPlaceholder += chr;
+                chrCount++;
+              });
+            }
+          });
+        }
+        // Otherwise it's a simple mask
+        else {
+          $.each(mask.split(''), function(i, chr) {
+            if (maskDefinitions[chr]) {
+              maskMap.push(i);
+              maskPlaceholder += '_';
+              maskPattern.push(maskDefinitions[chr]);
+            }
+            else
+              maskPlaceholder += chr;
+          });
+        }
         if (!maskMap.length) return this;
 
         // Intialize input
@@ -70,12 +90,15 @@
           return unmaskedValue;
         }
 
-        function maskValue(valUnmasked){
-          var valMasked        = '',
-              valUnmaskedIndex = 0;
-          $.each(mask.split(''), function(i, chr) {
-            if (maskDefinitions[chr])
-              valMasked += valUnmasked.charAt(valUnmaskedIndex++) || '_';
+        function maskValue(valUnmasked) {
+          var valMasked   = '',
+              maskMapCopy = maskMap.slice();
+          $.each(maskPlaceholder.split(''), function(i, chr) {
+            if (valUnmasked.length && i === maskMapCopy[0]) {
+              valMasked  += valUnmasked.charAt(0) || '_';
+              valUnmasked = valUnmasked.substr(1);
+              maskMapCopy.shift();
+            }
             else
               valMasked += chr;
           });
@@ -94,8 +117,7 @@
 
         function eventHandler(e) {
           var eventWhich = e.which,
-              eventType  = e.type,
-              inArray    = $.inArray;
+              eventType  = e.type;
 
           // Shift and ctrl aren't going to ruin our party.
           if (eventWhich == 16 || eventWhich == 91) return true;
@@ -118,9 +140,10 @@
               isSelected      = selectionLen > 0,
               wasSelected     = selectionLenOld > 0,
 
-                                                                // Case: Typing a character to overwrite a selection
+              isValidCaretPos = function(pos){ return $.inArray(pos, maskMap) > -1; },
+                                                                  // Case: Typing a character to overwrite a selection
               isAddition      = (val.length > valOld.length) || (selectionLenOld && val.length >  valOld.length - selectionLenOld),
-                                                                // Case: Delete and backspace behave identically on a selection
+                                                                  // Case: Delete and backspace behave identically on a selection
               isDeletion      = (val.length < valOld.length) || (selectionLenOld && val.length == valOld.length - selectionLenOld),
               isSelection     = (eventWhich >= 37 && eventWhich <= 40) && e.shiftKey, // Arrow key codes
 
@@ -149,11 +172,11 @@
 
           // User attempted to delete but raw value was unaffected—correct this grievous offense
           if ((eventType == 'input' || eventType == 'propertychange') && isDeletion && !wasSelected && valUnmasked === valUnmaskedOld) {
-            while (isKeyBackspace && caretPos > 0 && inArray(caretPos, maskMap) == -1)
+            while (isKeyBackspace && caretPos > 0 && !isValidCaretPos(caretPos))
               caretPos--;
             while (isKeyDelete && caretPos < maskPlaceholder.length && inArray(caretPos, maskMap) == -1)
               caretPos++;
-            var charIndex = inArray(caretPos, maskMap);
+            var charIndex = $.inArray(caretPos, maskMap);
             // Strip out character that user inteded to delete if mask hadn't been in the way.
             valUnmasked = valUnmasked.substring(0, charIndex) + valUnmasked.substring(charIndex + 1); 
           }
@@ -168,32 +191,17 @@
           // Caret Repositioning
           // ===================
 
-          // Make sure caret ends up after typed character.
-          if (caretPos <= caretPosMin && isAddition)
-            caretPos = caretPosMin + 1;
-
-          // Caret isn't allowed beyond first non-mask character
-          caretPos = caretPos > caretPosMax ? caretPosMax : caretPos;
-
           if (caretBumpBack)
             caretPos--;
-          while (inArray(caretPos, maskMap) === -1) {
-            if (caretBumpBack)
-              caretPos--;
-            else
-              caretPos++;
-            if (caretPos < maskMap[0]) {
-              caretPos = maskMap[0];
-              caretBumpBack = false;
-              break;
-            }
-            else if (caretPos >= mask.length){
-              caretPos = maskMap[maskMap.length - 1] + 1;
-              caretBumpBack = false;
-              break;
-            }
-          }
-          if (caretBumpBack || (isAddition && inArray(caretPosOld, maskMap) === -1))
+
+          // Make sure caret is within min and max positions
+          caretPos = caretPos > caretPosMax ? caretPosMax : caretPos < caretPosMin ? caretPosMin : caretPos;
+
+          // Scoot the caret around until it's in a valid position and within min and max limits
+          while (!isValidCaretPos(caretPos) && caretPos > caretPosMin && caretPos < caretPosMax)
+            caretPos += caretBumpBack ? -1 : 1;
+
+          if ((caretBumpBack && caretPos < caretPosMax) || (isAddition && !isValidCaretPos(caretPosOld)))
             caretPos++;
 
           elem.data('caretPositionPreinput', caretPos);
