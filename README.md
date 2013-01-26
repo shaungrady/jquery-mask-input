@@ -1,7 +1,14 @@
 jquery-mask-input
 =================
 
-A jQuery plugin for applying a mask to an input (e.g., phone numbers, dates, et cetera). jQuery Mask Input is licensed under the MIT license. Attribution is appreciated, though not required. 
+**A jQuery plugin for applying a mask to an input (e.g., phone numbers, dates, et cetera).**
+
+jQuery Mask Input is licensed under the MIT license. Attribution is appreciated, though not required. 
+
+######Features I'd like to implement
+* Callback when input validity changes state. 
+* Input class toggling when input validity changes state.  
+* Mask definitions are too restrictive in some cases. Add a way of passing in a more detailed mask (e.g., a mask for MM/DD/YYYY where the first M can only be 0-1, the first D can only be 0-3, and the first Y can only be 1-2).
 
 ## Demo
 http://plnkr.co/edit/qKCgHmJqOg7iXczmup5i?p=preview
