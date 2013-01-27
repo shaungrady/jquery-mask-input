@@ -25,14 +25,14 @@
             maskPattern = [],
             // Used for placeholder attribute of input as well as maskifying the unmasked value for
             // placement back into the input in the event listener.
-            maskPlaceholder = '';
+            maskPlaceholder = '',
+            chrCount = 0;
 
         if (mask === undefined)
           return true;
 
         // If mask is an array, it's a complex mask!
         if (mask instanceof Array) {
-          var chrCount = 0;
           $.each(mask, function(i, item) {
             if (item instanceof RegExp) {
               maskMap.push(chrCount++);
@@ -51,21 +51,27 @@
         else {
           $.each(mask.split(''), function(i, chr) {
             if (maskDefinitions[chr]) {
-              maskMap.push(i);
+              maskMap.push(chrCount);
               maskPlaceholder += '_';
               maskPattern.push(maskDefinitions[chr]);
             }
             else
               maskPlaceholder += chr;
+            chrCount++;
           });
         }
-        if (!maskMap.length) return this;
+
+        // No non-mask characters found
+        if (!maskMap.length)
+          return this;
+        // index after last non-mask character is allowed
+        maskMap.push(chrCount);
 
         // Intialize input
         (function(elem) {
           var valUnmasked = unmaskValue(elem.val()),
               valMasked   = maskValue(valUnmasked),
-              isValid     = (valUnmasked.length === maskMap.length);
+              isValid     = (valUnmasked.length === (maskMap.length - 1));
           elem.val(valMasked);
           elem.attr('value-unmasked', valUnmasked);
           elem.data('isUnmaskedValueValid', isValid);
@@ -135,7 +141,7 @@
               caretPosOld     = elem.data('caretPositionPreinput') || 0,
               caretPosDelta   = caretPos - caretPosOld,
               caretPosMin     = maskMap[0],
-              caretPosMax     = maskMap[valUnmasked.length - 1] + 1,
+              caretPosMax     = maskMap[valUnmasked.length] || (maskMap.slice().pop() + 1),
 
               selectionLen    = selectionLengthOf(this),
               selectionLenOld = elem.data('selectionLengthPreinput') || 0,
@@ -158,6 +164,9 @@
               // non-mask character. Also applied to click since users are arguably more likely to backspace
               // a character when clicking within a filled input.
               caretBumpBack   = (isKeyLeftArrow || isKeyBackspace || eventType == 'click') && caretPos > 0;
+
+          console.log(maskMap[valUnmasked.length]);
+          console.log(caretPosMax);
 
           elem.data('selectionLengthPreinput', selectionLen);
 
@@ -183,7 +192,7 @@
           }
 
           elem.attr('value-unmasked', valUnmasked);
-          elem.data('isUnmaskedValueValid', (valUnmasked.length === maskMap.length));
+          elem.data('isUnmaskedValueValid', (valUnmasked.length === (maskMap.length - 1)));
           
           valMasked = maskValue(valUnmasked);
           elem.data('valuePreinput', valMasked);
@@ -211,15 +220,6 @@
       });
     }
   });
-
-  
-
-
-
-
-
-
-
 
   // Helper functions, needs refactor to be cleaner.
   function caretPositionOf(input, pos) {
