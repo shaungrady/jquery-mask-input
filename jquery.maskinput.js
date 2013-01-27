@@ -78,6 +78,8 @@
         elem.bind('blur.mask', blurHandler).triggerHandler('blur');
         elem.bind('input.mask propertychange.mask keyup.mask click.mask', eventHandler);
 
+        function isValidCaretPos(pos) { return $.inArray(pos, maskMap) > -1; }
+
         function unmaskValue(val) {
           var unmaskedValue   = '',
               maskPatternCopy = maskPattern.slice();
@@ -133,17 +135,16 @@
               caretPosOld     = elem.data('caretPositionPreinput') || 0,
               caretPosDelta   = caretPos - caretPosOld,
               caretPosMin     = maskMap[0],
-              caretPosMax     = maskMap[valUnmasked.length],
+              caretPosMax     = maskMap[valUnmasked.length - 1] + 1,
 
               selectionLen    = selectionLengthOf(this),
               selectionLenOld = elem.data('selectionLengthPreinput') || 0,
               isSelected      = selectionLen > 0,
               wasSelected     = selectionLenOld > 0,
 
-              isValidCaretPos = function(pos){ return $.inArray(pos, maskMap) > -1; },
-                                                                  // Case: Typing a character to overwrite a selection
+                                                                // Case: Typing a character to overwrite a selection
               isAddition      = (val.length > valOld.length) || (selectionLenOld && val.length >  valOld.length - selectionLenOld),
-                                                                  // Case: Delete and backspace behave identically on a selection
+                                                                // Case: Delete and backspace behave identically on a selection
               isDeletion      = (val.length < valOld.length) || (selectionLenOld && val.length == valOld.length - selectionLenOld),
               isSelection     = (eventWhich >= 37 && eventWhich <= 40) && e.shiftKey, // Arrow key codes
 
@@ -178,7 +179,7 @@
               caretPos++;
             var charIndex = $.inArray(caretPos, maskMap);
             // Strip out character that user inteded to delete if mask hadn't been in the way.
-            valUnmasked = valUnmasked.substring(0, charIndex) + valUnmasked.substring(charIndex + 1); 
+            valUnmasked = valUnmasked.substring(0, charIndex) + valUnmasked.substring(charIndex + 1);
           }
 
           elem.attr('value-unmasked', valUnmasked);
@@ -210,6 +211,15 @@
       });
     }
   });
+
+  
+
+
+
+
+
+
+
 
   // Helper functions, needs refactor to be cleaner.
   function caretPositionOf(input, pos) {
