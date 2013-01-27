@@ -1,7 +1,7 @@
 /*
   Mask Input plugin for jQuery
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.2.0
+  Version: 1.2.1
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
@@ -164,9 +164,6 @@
               // non-mask character. Also applied to click since users are arguably more likely to backspace
               // a character when clicking within a filled input.
               caretBumpBack   = (isKeyLeftArrow || isKeyBackspace || eventType == 'click') && caretPos > 0;
-
-          console.log(maskMap[valUnmasked.length]);
-          console.log(caretPosMax);
 
           elem.data('selectionLengthPreinput', selectionLen);
 
