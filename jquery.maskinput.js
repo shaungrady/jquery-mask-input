@@ -77,7 +77,7 @@
           elem.attr('value-unmasked', valUnmasked);
           elem.data('isUnmaskedValueValid', isValid);
           // maxlength prevents typing as input is always filled to length of mask.
-          if (maxlength) elem.attr('maxlength', maxlength + 1);
+          if (maxlength) elem.attr('maxlength', (parseInt(maxlength, 10) + 1));
         })(elem);
 
         elem.attr('placeholder', maskPlaceholder);
