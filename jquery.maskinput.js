@@ -71,12 +71,13 @@
         (function(elem) {
           var valUnmasked = unmaskValue(elem.val()),
               valMasked   = maskValue(valUnmasked),
-              isValid     = (valUnmasked.length === (maskMap.length - 1));
+              isValid     = (valUnmasked.length === (maskMap.length - 1)),
+              maxlength   = elem.attr('maxlength');
           elem.val(valMasked);
           elem.attr('value-unmasked', valUnmasked);
           elem.data('isUnmaskedValueValid', isValid);
           // maxlength prevents typing as input is always filled to length of mask.
-          elem.removeAttr('maxlength');
+          if (maxlength) elem.attr('maxlength', maxlength + 1);
         })(elem);
 
         elem.attr('placeholder', maskPlaceholder);
