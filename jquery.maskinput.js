@@ -1,7 +1,7 @@
 /*
   Mask Input plugin for jQuery
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.3
+  Version: 1.4
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
@@ -12,8 +12,10 @@
 
   // Plugin
   $.fn.extend({
-    maskInput: function(maskOption) {
+    maskInput: function(maskOption, callback) {
       if (!this.length) return this;
+      callback = callback || $.noop;
+
       return this.filter('input').each(function(i, el) {
         var elem = $(el),
             mask = elem.attr('mask') || maskOption,
@@ -125,8 +127,10 @@
         }
 
         function eventHandler(e) {
+          // Allows more efficient minification
           var eventWhich = e.which,
               eventType  = e.type;
+
 
           // Shift and ctrl aren't going to ruin our party.
           if (eventWhich == 16 || eventWhich == 91) return true;
@@ -137,6 +141,8 @@
               valMasked,
               valUnmasked     = unmaskValue(val),
               valUnmaskedOld  = elem.attr('value-unmasked') || '',
+
+              isValid         = false,
 
               caretPos        = getCaretPositionIn(this) || 0,
               caretPosOld     = elem.data('caretPositionPreinput') || 0,
@@ -156,19 +162,15 @@
               isSelection     = (eventWhich >= 37 && eventWhich <= 40) && e.shiftKey, // Arrow key codes
 
               isKeyLeftArrow  = eventWhich == 37,
-                                                    // Necessary due to input event not providing a key code
+                                                    // Necessary due to "input" event not providing a key code
               isKeyBackspace  = eventWhich == 8  || (eventType != 'keyup' && isDeletion && (caretPosDelta === -1)),
               isKeyDelete     = eventWhich == 46 || (eventType != 'keyup' && isDeletion && (caretPosDelta === 0 ) && !wasSelected),
 
               // Handles cases where caret is moved and placed in front of invalid maskMap position. Logic below
               // ensures that, on click or leftward caret placement, caret is moved leftward until directly right of
-              // non-mask character. Also applied to click since users are arguably more likely to backspace
+              // non-mask character. Also applied to click since users are (arguably) more likely to backspace
               // a character when clicking within a filled input.
-              caretBumpBack   = (isKeyLeftArrow || isKeyBackspace || eventType == 'click') && caretPos > 0;
-
-          
-          if (wasSelected && isAddition && (caretPos <= caretPosMin))
-            caretPos = caretPosMin + 1;
+              caretBumpBack   = (isKeyLeftArrow || isKeyBackspace || eventType == 'click') && caretPos > caretPosMin;
 
           elem.data('selectionLengthPreinput', selectionLen);
 
@@ -193,8 +195,10 @@
             valUnmasked = valUnmasked.substring(0, charIndex) + valUnmasked.substring(charIndex + 1);
           }
 
+          isValid = valUnmasked.length === (maskMap.length - 1);
+
           elem.attr('value-unmasked', valUnmasked);
-          elem.data('isUnmaskedValueValid', (valUnmasked.length === (maskMap.length - 1)));
+          elem.data('isUnmaskedValueValid', isValid);
           
           valMasked = maskValue(valUnmasked);
           elem.data('valuePreinput', valMasked);
@@ -202,6 +206,10 @@
 
           // Caret Repositioning
           // ===================
+
+          // Ensure that typing always places caret ahead of typed character
+          if (isAddition && (caretPos <= caretPosMin))
+            caretPos = caretPosMin + 1;
 
           if (caretBumpBack)
             caretPos--;
@@ -218,12 +226,20 @@
 
           elem.data('caretPositionPreinput', caretPos);
           setCaretPositionIn(this, caretPos);
+
+          // Callback
+          callback({
+            isValid: isValid,
+            value: valUnmasked,
+            maskedValue: valMasked
+          });
         }
       });
     }
   });
 
   // Helper functions
+  // ================
 
   function getCaretPositionIn(input) {
     if (input.selectionStart !== undefined)
