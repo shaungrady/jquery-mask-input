@@ -15,7 +15,7 @@ http://plnkr.co/edit/qKCgHmJqOg7iXczmup5i?p=preview
 
 ## Usage
 
-	.maskInput([mask]);
+	.maskInput(mask. [callback]);
 
 -
 	
@@ -33,6 +33,14 @@ Below is an example of a phone number mask.
 	
 	<script type="text/javascript">
 		$('#phone').maskInput('(999) 999-9999');
+	</script>
+
+Alternatively, a mask can be specified in the ``mask`` attribute of the input element.
+
+	<input id="phone" type="text" name="phone" mask="(999) 999-9999">
+	
+	<script type="text/javascript">
+		$('#phone').maskInput();
 	</script>
 
 After the mask is applied, the ``placeholder`` attribute will be set to ``(___) ___-___``.
@@ -58,3 +66,15 @@ Please note that the RegEx portions of the array can only apply to 1 character e
 
 
 The unmasked value is set as the value of the "value-unmasked" attribute of the input. Validity of the current value can be accessed by using ``$('input').data('isUnmaskedValueValid')``, which returns ``true`` or ``false``.
+
+
+### CALLBACK
+
+If provided, the callback will be called and the following object will be passed as an argument:
+
+	{
+		isValid: boolean,
+		value: 'value without mask',
+		maskedValue: 'value with mask'
+	}
+	
