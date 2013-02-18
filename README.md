@@ -5,10 +5,6 @@ jquery-mask-input
 
 jQuery Mask Input is licensed under the MIT license. Attribution is appreciated, though not required. 
 
-######Features I'd like to implement
-* Callback when input validity changes state. 
-* Input class toggling when input validity changes state.
-
 ## Demo
 http://plnkr.co/edit/qKCgHmJqOg7iXczmup5i?p=preview
 
