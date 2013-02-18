@@ -1,7 +1,7 @@
 /*
   Mask Input plugin for jQuery
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.2.1
+  Version: 1.3
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
@@ -138,7 +138,7 @@
               valUnmasked     = unmaskValue(val),
               valUnmaskedOld  = elem.attr('value-unmasked') || '',
 
-              caretPos        = caretPositionOf(this) || 0,
+              caretPos        = getCaretPositionIn(this) || 0,
               caretPosOld     = elem.data('caretPositionPreinput') || 0,
               caretPosDelta   = caretPos - caretPosOld,
               caretPosMin     = maskMap[0],
@@ -166,6 +166,10 @@
               // a character when clicking within a filled input.
               caretBumpBack   = (isKeyLeftArrow || isKeyBackspace || eventType == 'click') && caretPos > 0;
 
+          
+          if (wasSelected && isAddition && (caretPos <= caretPosMin))
+            caretPos = caretPosMin + 1;
+
           elem.data('selectionLengthPreinput', selectionLen);
 
           // Track mouseout for cases where user drags selection outside input bounds.
@@ -178,11 +182,11 @@
           // Value Handling
           // ==============
 
-          // User attempted to delete but raw value was unaffected—correct this grievous offense
+          // User attempted to delete but raw value was unaffected--correct this grievous offense
           if ((eventType == 'input' || eventType == 'propertychange') && isDeletion && !wasSelected && valUnmasked === valUnmaskedOld) {
             while (isKeyBackspace && caretPos > 0 && !isValidCaretPos(caretPos))
               caretPos--;
-            while (isKeyDelete && caretPos < maskPlaceholder.length && inArray(caretPos, maskMap) == -1)
+            while (isKeyDelete && caretPos < maskPlaceholder.length && $.inArray(caretPos, maskMap) == -1)
               caretPos++;
             var charIndex = $.inArray(caretPos, maskMap);
             // Strip out character that user inteded to delete if mask hadn't been in the way.
@@ -205,7 +209,7 @@
           // Make sure caret is within min and max positions
           caretPos = caretPos > caretPosMax ? caretPosMax : caretPos < caretPosMin ? caretPosMin : caretPos;
 
-          // Scoot the caret around until it's in a valid position and within min and max limits
+          // Scoot the caret around until it's in a valid position and within min/max limits
           while (!isValidCaretPos(caretPos) && caretPos > caretPosMin && caretPos < caretPosMax)
             caretPos += caretBumpBack ? -1 : 1;
 
@@ -213,42 +217,40 @@
             caretPos++;
 
           elem.data('caretPositionPreinput', caretPos);
-          caretPositionOf(this, caretPos);
+          setCaretPositionIn(this, caretPos);
         }
       });
     }
   });
 
-  // Helper functions, needs refactor to be cleaner.
-  function caretPositionOf(input, pos) {
-    // Set position
-    if (pos !== undefined) {
-      if (input.setSelectionRange) {
-        input.focus();
-        input.setSelectionRange(pos,pos);
-      }
-      else if (input.createTextRange) {
-        var range = input.createTextRange();
-        range.collapse(true);
-        range.moveEnd('character', pos);
-        range.moveStart('character', pos);
-        range.select();
-      }
-    }
-    // Get position
-    else {
-      var caretPosition = 0;
-      if (document.selection) {
-        input.focus();
-        var selection = document.selection.createRange();
-        selection.moveStart('character', -input.value.length);
-        caretPosition = selection.text.length;
-      }
-      if (input.selectionStart !== undefined)
-        caretPosition = input.selectionStart;
-      return (caretPosition);
+  // Helper functions
+
+  function getCaretPositionIn(input) {
+    if (input.selectionStart !== undefined)
+      return input.selectionStart;
+    else if (document.selection) {
+      // Curse you IE
+      input.focus();
+      var selection = document.selection.createRange();
+      selection.moveStart('character', -input.value.length);
+      return selection.text.length;
     }
   }
+
+  function setCaretPositionIn(input, pos) {
+    if (input.setSelectionRange) {
+      input.focus();
+      input.setSelectionRange(pos,pos); }
+    else if (input.createTextRange) {
+      // Curse you IE
+      var range = input.createTextRange();
+      range.collapse(true);
+      range.moveEnd('character', pos);
+      range.moveStart('character', pos);
+      range.select();
+    }
+  }
+
   function selectionLengthOf(input) {
     if (input.selectionStart !== undefined)
       return (input.selectionEnd - input.selectionStart);
