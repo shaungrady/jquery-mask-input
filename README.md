@@ -6,7 +6,7 @@ jQuery Mask Input Plugin
 jQuery Mask Input is licensed under the MIT license. Attribution is appreciated, though not required. 
 
 ## Demo
-http://plnkr.co/edit/qKCgHmJqOg7iXczmup5i?p=preview
+http://plnkr.co/edit/YJrNnr?p=preview
 
 
 ## Usage
