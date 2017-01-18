@@ -71,6 +71,7 @@ If provided, the callback will be called and the following object will be passed
 	{
 		isValid: boolean,
 		value: 'value without mask',
-		maskedValue: 'value with mask'
+		maskedValue: 'value with mask',
+		inputElement: 'jQuery input object'
 	}
 	
