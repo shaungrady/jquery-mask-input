@@ -231,7 +231,8 @@
           callback({
             isValid: isValid,
             value: valUnmasked,
-            maskedValue: valMasked
+            maskedValue: valMasked,
+            inputElement: elem
           });
         }
       });
