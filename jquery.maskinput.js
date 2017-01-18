@@ -1,7 +1,7 @@
 /*
   Mask Input plugin for jQuery
   Licensed under the MIT license (https://github.com/shaungrady/jquery-mask-input/blob/master/LICENSE)
-  Version: 1.4
+  Version: 1.5
 */
 (function ($, window, document, undefined) {
   var maskDefinitions = {
