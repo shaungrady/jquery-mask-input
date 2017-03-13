@@ -128,7 +128,6 @@
                 }
 
                 function eventHandler(e) {
-                    console.log(e);
                     // Allows more efficient minification
                     var eventWhich = e.which,
                         eventType  = e.type;
