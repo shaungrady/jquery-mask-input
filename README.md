@@ -6,12 +6,12 @@ jQuery Mask Input Plugin
 jQuery Mask Input is licensed under the MIT license. Attribution is appreciated, though not required. 
 
 ## Demo
-http://plnkr.co/edit/qKCgHmJqOg7iXczmup5i?p=preview
+http://plnkr.co/edit/YJrNnr?p=preview
 
 
 ## Usage
 
-	.maskInput(mask. [callback]);
+	.maskInput(mask., [callbackBeforeInput], [callbackAfterInput] );
 
 -
 	
@@ -64,13 +64,27 @@ Please note that the RegEx portions of the array can only apply to 1 character e
 The unmasked value is set as the value of the "value-unmasked" attribute of the input. Validity of the current value can be accessed by using ``$('input').data('isUnmaskedValueValid')``, which returns ``true`` or ``false``.
 
 
-### CALLBACK
+### CALLBACKS
+
+#### Before Input - validating the data
 
 If provided, the callback will be called and the following object will be passed as an argument:
 
 	{
+		value: 'value without mask',
+		maskedValue: 'value with mask',
+		lastChar: 'last entered character',
+		inputElement: 'jQuery input object'
+	}
+	
+#### After Input - callback after entering the character
+
+If provided, the callback will be called and the following object will be passed as an argument: 
+
+	{
 		isValid: boolean,
 		value: 'value without mask',
-		maskedValue: 'value with mask'
+		maskedValue: 'value with mask',
+		inputElement: 'jQuery input object'
 	}
 	
